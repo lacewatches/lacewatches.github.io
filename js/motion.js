@@ -44,18 +44,24 @@
     new Promise(r => setTimeout(r, ms))
   ]);
   M.navegar = (fazer, ehProduto) => {
-    if (!vtOk || !M.pronto) { fazer(); return; }
+    if (!vtOk || !M.pronto || document.hidden) { fazer(); return; }
     const origem = ehProduto ? fotoOrigem : null;
     fotoOrigem = null;
     if (origem) origem.style.viewTransitionName = "foto-produto";
     document.documentElement.classList.add("vt");
+    let feito = false;
+    const rodar = () => { if (feito) return false; feito = true; fazer(); return true; };
     const vt = document.startViewTransition(async () => {
       if (origem) origem.style.viewTransitionName = "";
-      fazer();
+      if (!rodar()) return;
       const destino = $("#galImg");
       if (origem && destino) { destino.style.viewTransitionName = "foto-produto"; await esperarImg(destino); }
     });
-    vt.finished.finally(() => {
+    // garantia: se o navegador não animar (aba em segundo plano etc.), troca a página mesmo assim
+    vt.updateCallbackDone.catch(() => {});
+    vt.ready.catch(() => {});
+    setTimeout(() => { if (!feito) { try { vt.skipTransition(); } catch (e) {} if (origem) origem.style.viewTransitionName = ""; rodar(); } }, 450);
+    vt.finished.catch(() => {}).finally(() => {
       document.documentElement.classList.remove("vt");
       const d = $("#galImg"); if (d) d.style.viewTransitionName = "";
     });
