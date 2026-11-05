@@ -109,7 +109,11 @@ input,select,textarea{ font:inherit; color:inherit; }
 .card-media img.alt{ opacity:0; }
 .card:hover .card-media img{ transform:scale(1.05); }
 .card:hover .card-media img.alt{ opacity:1; }
-.card.soldout .card-media img{ filter:grayscale(.7); opacity:.6; }
+.card.soldout .card-media img{ filter:grayscale(.7); }
+.card.soldout .card-media img:not(.alt){ opacity:.6; }
+.card.soldout .card-media img.alt{ opacity:0; }
+.card.soldout:hover .card-media img.alt{ opacity:.6; }
+.card.soldout:hover .card-media img:not(.alt){ opacity:0; }
 .tag{ position:absolute; top:10px; left:10px; z-index:2; font-size:.56rem; letter-spacing:.16em; text-transform:uppercase; color:#fff; background:rgba(24,24,24,.6); padding:5px 10px; border-radius:999px; }
 .tag.selo{ background:var(--accent); }
 .fav{ position:absolute; top:8px; right:8px; z-index:3; width:36px; height:36px; border-radius:50%; border:none; background:rgba(255,255,255,.9); display:grid; place-items:center; }
