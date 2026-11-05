@@ -417,3 +417,8 @@ html.lenis{ scroll-behavior:auto; }
 .toolbar > *{ min-width:0; max-width:100%; }
 .toast{ width:max-content; max-width:calc(100vw - 32px); }
 .toast > span:first-child{ min-width:0; }
+/* rodapé com ícones */
+.footer-links{ gap:10px; }
+.footer-links a{ display:inline-flex; align-items:center; gap:8px; border:1px solid var(--line); border-bottom:1px solid var(--line); background:var(--panel); border-radius:999px; padding:9px 16px 9px 12px; transition:border-color .25s, color .25s, transform .25s; }
+.footer-links a:hover{ border-color:var(--gold); color:var(--brown); transform:translateY(-1px); }
+.footer-links svg{ width:17px; height:17px; fill:none; stroke:currentColor; stroke-width:1.5; stroke-linecap:round; stroke-linejoin:round; flex:none; color:var(--brown); }

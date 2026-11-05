@@ -135,7 +135,7 @@
     const links = [`<a href="#colecao" data-nav="colecao">Coleção</a>`, ...cats.map(c => `<a href="#c-${esc(c.id)}" data-nav="c-${esc(c.id)}">${esc(c.nome)}</a>`)].join("");
     $("#nav").innerHTML = links;
     $("#sideNav").innerHTML = links + `<hr><a href="#favoritos">Favoritos</a><a href="#pedidos">Meus pedidos</a>`;
-    if (LOJA.instagram) { const a = $("#instaLink"); a.href = `https://www.instagram.com/${LOJA.instagram}/`; a.textContent = "@" + LOJA.instagram; }
+    if (LOJA.instagram) { const a = $("#instaLink"); a.href = `https://www.instagram.com/${LOJA.instagram}/`; (a.querySelector("span") || a).textContent = "@" + LOJA.instagram; }
     const fone = digits(LOJA.whatsapp);
     if (fone.length >= 12) { const w = $("#wppFloat"); w.href = `https://wa.me/${fone}?text=${encodeURIComponent("Olá! Vim pelo site da Lace.")}`; w.hidden = false; }
   }
