@@ -18,7 +18,7 @@
   const DB = window.LaceDB;
 
   let fb, db, auth;
-  let PEDIDOS = [], PRODUTOS = [], CONFIG = {}, CUPONS = [];
+  let PEDIDOS = [], PRODUTOS = [], CONFIG = {}, CUPONS = [], LOOKS = [];
   let filtroSt = "pendente", periodo = 30;
   const sujos = new Map();
 
@@ -77,7 +77,7 @@
   });
 
   async function carregarTudo() {
-    await Promise.all([carregarProdutos(), carregarPedidos(), carregarCupons()]);
+    await Promise.all([carregarProdutos(), carregarPedidos(), carregarCupons(), carregarLooks()]);
     renderInicio();
   }
 
@@ -131,7 +131,9 @@
     $("#topProd").innerHTML = top.length ? `<ol class="rank">${top.map(([n, q]) => `<li><span>${esc(n)}</span><b>${q}</b></li>`).join("")}</ol>` : `<p class="muted small">Sem vendas no período.</p>`;
 
     const velhos = pend.filter(p => agora - dt(p) > 864e5);
-    $("#atencao").innerHTML = (velhos.length || aEnviar.length) ? `<ul class="att">
+    const lpend = LOOKS.filter(l => !l.publicado).length;
+    $("#atencao").innerHTML = (velhos.length || aEnviar.length || lpend) ? `<ul class="att">
+      ${lpend ? `<li><b>${lpend}</b> foto(s) de cliente aguardando aprovação <button class="link-btn" data-irlooks>ver</button></li>` : ""}
       ${aEnviar.length ? `<li><b>${aEnviar.length}</b> pedido(s) pago(s) esperando envio <button class="link-btn" data-ir="pago">ver</button></li>` : ""}
       ${velhos.length ? `<li><b>${velhos.length}</b> pedido(s) aguardando pagamento há mais de 1 dia <button class="link-btn" data-ir="pendente">ver</button></li>` : ""}
     </ul>` : `<p class="muted small">Tudo em dia.</p>`;
@@ -624,8 +626,113 @@
     } catch (err) { toast(msgErro(err), true); }
   });
 
+
+  /* ================= CLIENTES USANDO LACE (looks) ================= */
+  let filtroLook = "todos", editL = null;
+  async function carregarLooks() {
+    try { const s = await db.collection("looks").get(); LOOKS = s.docs.map(d => ({ ...d.data(), id: d.id })).sort((a, b) => (a.ordem ?? 0) - (b.ordem ?? 0)); renderLooks(); }
+    catch (e) { $("#listaLooks").innerHTML = `<p class="adm-erro">${esc(msgErro(e))}</p>`; }
+  }
+  function renderLooks() {
+    const l = LOOKS.filter(x => filtroLook === "todos" || (filtroLook === "pub" ? x.publicado : !x.publicado));
+    $("#listaLooks").innerHTML = l.map(x => `<article class="look-adm" data-id="${esc(x.id)}">
+      <img data-src="${esc(x.img || "")}" alt="">
+      <div><b>${esc(x.autor || "sem @")}</b><small>${(x.pins || []).length} peça(s) marcada(s)</small>
+        <span class="pill ${x.publicado ? "pub" : ""}">${x.publicado ? "publicada" : "aguardando aprovação"}</span></div>
+      <div class="look-adm-acoes">
+        <button class="btn-ghost sm" data-lmov="-1" aria-label="Antes">↑</button><button class="btn-ghost sm" data-lmov="1" aria-label="Depois">↓</button>
+        <button class="btn-ghost sm" data-lpub>${x.publicado ? "Despublicar" : "Publicar"}</button>
+        <button class="btn-dark sm" data-ledit>Editar</button></div></article>`).join("") || `<p class="vazio">Nenhuma foto aqui ainda.</p>`;
+    aplicarImgs($("#listaLooks"));
+  }
+  $("#filtroLooks").addEventListener("click", e => { const c = e.target.closest("[data-lf]"); if (!c) return; filtroLook = c.dataset.lf; $$("#filtroLooks .chip").forEach(x => x.classList.toggle("on", x === c)); renderLooks(); });
+  document.addEventListener("click", e => { if (e.target.closest("[data-irlooks]")) { filtroLook = "pend"; $$("#filtroLooks .chip").forEach(x => x.classList.toggle("on", x.dataset.lf === "pend")); abrirAba("looks"); renderLooks(); } });
+  $("#listaLooks").addEventListener("click", async e => {
+    const a = e.target.closest(".look-adm"); if (!a) return;
+    const x = LOOKS.find(l => l.id === a.dataset.id);
+    try {
+      if (e.target.closest("[data-ledit]")) return abrirLook(x);
+      if (e.target.closest("[data-lpub]")) { await db.collection("looks").doc(x.id).update({ publicado: !x.publicado }); toast(x.publicado ? "Foto tirada do site" : "Foto publicada no site"); return carregarLooks(); }
+      const m = e.target.closest("[data-lmov]");
+      if (m) {
+        const i = LOOKS.indexOf(x), j = i + +m.dataset.lmov; if (j < 0 || j >= LOOKS.length) return;
+        [LOOKS[i], LOOKS[j]] = [LOOKS[j], LOOKS[i]];
+        const lote = db.batch(); LOOKS.forEach((l, k) => lote.update(db.collection("looks").doc(l.id), { ordem: k })); await lote.commit(); carregarLooks();
+      }
+    } catch (err) { toast(msgErro(err), true); }
+  });
+
+  function abrirLook(x) {
+    editL = x ? { id: x.id, img: x.img || "", pins: (x.pins || []).map(p => ({ ...p })) } : { id: null, img: "", pins: [] };
+    $("#mlAutor").value = x ? x.autor || "" : ""; $("#mlLink").value = x ? x.link || "" : ""; $("#mlLeg").value = x ? x.legenda || "" : "";
+    $("#mlPub").checked = x ? !!x.publicado : false;
+    $("#mlExcluir").hidden = !x; $("#mlConfExc").hidden = true;
+    desenharLookFoto(); desenharPins();
+    $("#modalLook").hidden = false; document.body.classList.add("locked");
+  }
+  function fecharLook() { $("#modalLook").hidden = true; document.body.classList.remove("locked"); editL = null; }
+  $("#btnNovoLook").addEventListener("click", () => abrirLook(null));
+  $("#mlFechar").addEventListener("click", fecharLook);
+  $("#modalLook").addEventListener("click", e => { if (e.target.id === "modalLook") fecharLook(); });
+  function desenharLookFoto() {
+    const box = $("#mlFoto");
+    if (!editL.img) { box.innerHTML = `<p class="muted small">Envie a foto para começar.</p>`; return; }
+    box.innerHTML = `<img data-src="${esc(editL.img)}" alt="" draggable="false">` + editL.pins.map((p, i) => `<span class="pin-adm" style="left:${p.x * 100}%;top:${p.y * 100}%">${i + 1}</span>`).join("");
+    aplicarImgs(box);
+  }
+  $("#mlFoto").addEventListener("click", e => {
+    const im = $("img", $("#mlFoto")); if (!im || !editL) return;
+    const r = im.getBoundingClientRect();
+    const x = (e.clientX - r.left) / r.width, y = (e.clientY - r.top) / r.height;
+    if (x < 0 || x > 1 || y < 0 || y > 1) return;
+    lerPins();
+    editL.pins.push({ x: Math.round(x * 1000) / 1000, y: Math.round(y * 1000) / 1000, produto: "", opt: null });
+    desenharLookFoto(); desenharPins();
+    const sel = $$("#mlPins select[data-pp]").pop(); if (sel) sel.focus();
+  });
+  const prodOpts = sel => `<option value="">Escolha a peça…</option>` + catsDe().map(c => {
+    const ps = PRODUTOS.filter(p => p.categoria === c.id); if (!ps.length) return "";
+    return `<optgroup label="${esc(c.nome)}">${ps.map(p => `<option value="${esc(p.id)}" ${p.id === sel ? "selected" : ""}>${esc(p.nome)}</option>`).join("")}</optgroup>`;
+  }).join("");
+  function desenharPins() {
+    $("#mlPins").innerHTML = editL.pins.map((pn, i) => {
+      const p = PRODUTOS.find(x => x.id === pn.produto), ops = p ? opcoes(p) : [];
+      return `<div class="pin-row" data-i="${i}"><span class="pin-num">${i + 1}</span>
+        <select data-pp>${prodOpts(pn.produto)}</select>
+        ${ops.length ? `<select data-po><option value="">${esc((p.opcoes.titulo || "Opção"))} (qualquer)</option>${ops.map((o, k) => `<option value="${k}" ${pn.opt === k ? "selected" : ""}>${esc(o.nome)}</option>`).join("")}</select>` : `<span></span>`}
+        <button class="btn-ghost sm danger" data-prm aria-label="Remover ponto">✕</button></div>`;
+    }).join("") || `<p class="muted small">Nenhuma peça marcada ainda. Toque na foto para marcar.</p>`;
+  }
+  function lerPins() {
+    $$("#mlPins .pin-row").forEach(r => { const pn = editL.pins[+r.dataset.i]; pn.produto = $("[data-pp]", r).value; const o = $("[data-po]", r); pn.opt = o && o.value !== "" ? +o.value : null; });
+  }
+  $("#mlPins").addEventListener("change", e => { if (e.target.matches("[data-pp]")) { lerPins(); editL.pins[+e.target.closest(".pin-row").dataset.i].opt = null; desenharPins(); } });
+  $("#mlPins").addEventListener("click", e => { const b = e.target.closest("[data-prm]"); if (!b) return; lerPins(); editL.pins.splice(+b.closest(".pin-row").dataset.i, 1); desenharLookFoto(); desenharPins(); });
+  $("#mlUp").addEventListener("change", async e => {
+    const f = e.target.files[0]; e.target.value = ""; if (!f) return;
+    toast("Enviando foto…");
+    try { editL.img = await enviarImagem(f, 1400); desenharLookFoto(); toast("Foto enviada. Agora toque nas peças."); }
+    catch (err) { toast(msgErro(err), true); }
+  });
+  $("#mlSalvar").addEventListener("click", async () => {
+    lerPins();
+    if (!editL.img) { toast("Envie a foto da cliente", true); return; }
+    const pins = editL.pins.filter(p => p.produto);
+    const dados = { img: editL.img, autor: $("#mlAutor").value.trim(), link: $("#mlLink").value.trim(), legenda: $("#mlLeg").value.trim(), publicado: $("#mlPub").checked, pins };
+    try {
+      if (editL.id) await db.collection("looks").doc(editL.id).set(dados, { merge: true });
+      else await db.collection("looks").doc().set({ ...dados, ordem: -Date.now(), criadoEm: TS() });
+      toast(dados.publicado ? "Foto salva e publicada" : "Foto salva (ainda não publicada)"); fecharLook(); carregarLooks();
+    } catch (e) { toast(msgErro(e), true); }
+  });
+  $("#mlExcluir").addEventListener("click", () => { $("#mlConfExc").hidden = false; });
+  $("#mlExcNao").addEventListener("click", () => { $("#mlConfExc").hidden = true; });
+  $("#mlExcSim").addEventListener("click", async () => {
+    try { await db.collection("looks").doc(editL.id).delete(); toast("Foto excluída"); fecharLook(); carregarLooks(); } catch (e) { toast(msgErro(e), true); }
+  });
+
   window.addEventListener("beforeunload", e => { if (sujos.size) { e.preventDefault(); e.returnValue = ""; } });
-  document.addEventListener("keydown", e => { if (e.key === "Escape" && !$("#modalProd").hidden) fecharModal(); });
+  document.addEventListener("keydown", e => { if (e.key !== "Escape") return; if (!$("#modalProd").hidden) fecharModal(); if (!$("#modalLook").hidden) fecharLook(); });
 
   init();
 })();

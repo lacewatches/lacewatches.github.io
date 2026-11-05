@@ -109,8 +109,16 @@
     return s.exists ? { ...s.data(), codigo: s.id } : null;
   }
 
+  /* ---------- looks (fotos de clientes aprovadas) ---------- */
+  async function carregarLooks() {
+    const fb = await comPrazo(iniciar(), 8000);
+    if (!fb) return [];
+    const s = await comPrazo(fb.firestore().collection("looks").where("publicado", "==", true).get(), 8000);
+    return s.docs.map(d => ({ ...d.data(), id: d.id })).sort((a, b) => (a.ordem ?? 0) - (b.ordem ?? 0));
+  }
+
   const data = v => (v && v.toDate) ? v.toDate() : (v ? new Date(v) : null);
 
-  window.LaceDB = { ativo, iniciar, carregarCatalogo, registrarPedido, obterPedido, buscarCupom,
+  window.LaceDB = { ativo, iniciar, carregarCatalogo, carregarLooks, registrarPedido, obterPedido, buscarCupom,
                     chave, estoque, imagem, aplicarImagens, data };
 })();

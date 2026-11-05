@@ -17,6 +17,12 @@ service cloud.firestore {
     match /config/{id}   { allow read: if true; allow write: if isAdmin(); }
     match /imagens/{id}  { allow read: if true; allow write: if isAdmin(); }
 
+    // Fotos de clientes usando Lace: só as publicadas aparecem para o público.
+    match /looks/{id} {
+      allow get, list: if resource.data.publicado == true || isAdmin();
+      allow write: if isAdmin();
+    }
+
     // Cupons: a cliente só consegue conferir um código que já sabe.
     match /cupons/{id} {
       allow get: if true;

@@ -44,6 +44,7 @@
     <button class="on" data-tab="inicio">Início</button>
     <button data-tab="pedidos">Pedidos <span class="badge" id="badgePend" hidden>0</span></button>
     <button data-tab="produtos">Produtos e estoque</button>
+    <button data-tab="looks">Clientes usando Lace</button>
     <button data-tab="vitrine">Vitrine</button>
     <button data-tab="config">Configurações</button>
   </nav>
@@ -96,6 +97,18 @@
     </div>
     <p class="muted small">Preço vazio = "valor a combinar". Estoque vazio (∞) = sem controle. Estoque 0 = esgotado. Clique em <b>Editar</b> para fotos, descrição, cores e tamanhos.</p>
     <div id="listaProdutos" class="produtos"></div>
+  </section>
+
+  <!-- LOOKS -->
+  <section class="adm-tab" id="tab-looks" hidden>
+    <div class="adm-bar">
+      <div class="chips" id="filtroLooks">
+        <button class="chip on" data-lf="todos">Todas</button><button class="chip" data-lf="pend">Aguardando aprovação</button><button class="chip" data-lf="pub">Publicadas</button>
+      </div>
+      <button class="btn-dark" id="btnNovoLook">+ Nova foto de cliente</button>
+    </div>
+    <p class="muted small">Salve a foto em que a cliente marcou a Lace, cadastre aqui com o @ dela e marque as peças tocando na foto. Ela só aparece no site depois de <b>Publicar</b>. Peça autorização à cliente antes de publicar a foto dela.</p>
+    <div id="listaLooks" class="looks-adm"></div>
   </section>
 
   <!-- VITRINE -->
@@ -203,6 +216,33 @@
       <button class="btn-ghost danger" id="mpExcluir">Excluir produto</button>
       <span class="confirma-inline" id="mpConfExc" hidden>Excluir mesmo? <button class="btn-dark" id="mpExcSim">Sim, excluir</button><button class="btn-ghost" id="mpExcNao">Não</button></span>
       <button class="btn-dark" id="mpSalvar">Salvar produto</button>
+    </div>
+  </div>
+</div>
+
+<!-- edição de look -->
+<div class="modal" id="modalLook" hidden>
+  <div class="modal-card adm-form" role="dialog" aria-modal="true" aria-labelledby="mlTit">
+    <div class="modal-head"><h2 id="mlTit">Foto de cliente</h2><button class="btn-ghost" id="mlFechar">Fechar</button></div>
+    <div class="mp-grid">
+      <div>
+        <div class="ml-foto" id="mlFoto"><p class="muted small">Envie a foto para começar.</p></div>
+        <label class="btn-ghost up">Escolher foto<input type="file" id="mlUp" accept="image/*" hidden></label>
+        <p class="muted small">Toque na foto em cima de cada peça para colocar um ponto. Depois escolha qual produto é.</p>
+      </div>
+      <div>
+        <label>@ da cliente no Instagram<input id="mlAutor" placeholder="@nome"></label>
+        <label>Link do post <small>(opcional)</small><input id="mlLink" placeholder="https://www.instagram.com/p/..."></label>
+        <label>Legenda <small>(opcional)</small><input id="mlLeg" maxlength="140"></label>
+        <label class="chk"><input type="checkbox" id="mlPub"> Publicar no site</label>
+        <h4>Peças marcadas</h4>
+        <div id="mlPins"><p class="muted small">Nenhuma peça marcada ainda.</p></div>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn-ghost danger" id="mlExcluir">Excluir foto</button>
+      <span class="confirma-inline" id="mlConfExc" hidden>Excluir mesmo? <button class="btn-dark" id="mlExcSim">Sim, excluir</button><button class="btn-ghost" id="mlExcNao">Não</button></span>
+      <button class="btn-dark" id="mlSalvar">Salvar</button>
     </div>
   </div>
 </div>

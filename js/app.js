@@ -5,6 +5,7 @@
      #p-bag-clara    produto         #busca                 resultado da busca
      #favoritos      favoritos       #checkout              finalizar compra
      #pedidos        meus pedidos    #pedido-ID             acompanhar pedido
+     #looks          fotos de clientes usando Lace
      #admin          painel da loja (abre admin.html; protegido por login)
    Dados: Firebase (painel) — ou dados/produtos.js como reserva.
    ========================================================== */
@@ -46,7 +47,7 @@
   }
 
   /* ================= ESTADO ================= */
-  let LOJA = {}, PAG = {}, FRETE = {}, VIT = {}, CATS = [], PRODUTOS = [];
+  let LOJA = {}, PAG = {}, FRETE = {}, VIT = {}, CATS = [], PRODUTOS = [], LOOKS = [];
   const byId = {};
   const escolha = {};
   let cart = ls.get(CART_KEY, []);
@@ -122,6 +123,7 @@
     PRODUTOS.forEach((p, i) => { p._ordem = i; byId[p.id] = p; });
     cart = cart.filter(it => byId[it.id]);
     saveCart();
+    if (ONLINE) { try { LOOKS = await DB.carregarLooks(); } catch (e) { LOOKS = []; } }
   }
 
   /* ================= CABEÇALHO / MENU ================= */
@@ -247,6 +249,7 @@
     if (h === "favoritos") { renderFavoritos(); topo(); return; }
     if (h === "checkout") { renderCheckout(); topo(); return; }
     if (h === "pedidos") { renderMeusPedidos(); topo(); return; }
+    if (h === "looks") { renderLooks(); topo(); return; }
     if (h.startsWith("pedido-")) { renderPedido(h.slice(7)); topo(); return; }
     renderInicio(); topo();
   }
@@ -311,6 +314,12 @@
         <div class="sec-head row"><h2>${esc(VIT.destaquesTitulo || "As queridinhas")}</h2><a href="#colecao" class="more">Ver tudo</a></div>
         <div class="grid">${lista1.map(cardHTML).join("")}</div>
       </section>
+
+      ${LOOKS.length ? `
+      <section class="wrap sec">
+        <div class="sec-head row"><div><span class="eyebrow">Marque @${esc(LOJA.instagram || "lace_watchesbags")}</span><h2>Vocês de Lace</h2></div><a href="#looks" class="more">Ver todas</a></div>
+        <div class="looks">${LOOKS.slice(0, 8).map(lookTile).join("")}</div>
+      </section>` : ""}
 
       ${cats.slice(0, 3).map(c => {
         const ps = vitrine.filter(p => p.categoria === c.id).slice(0, 4);
@@ -425,6 +434,7 @@
           </ul>
         </div>
       </section>
+      ${looksDe(p.id).length ? `<section class="wrap sec"><div class="sec-head"><span class="eyebrow">Na vida real</span><h2>Quem já usa</h2></div><div class="looks">${looksDe(p.id).slice(0, 8).map(lookTile).join("")}</div></section>` : ""}
       ${rel.length ? `<section class="wrap sec"><div class="sec-head row"><h2>Você também pode gostar</h2></div><div class="grid">${rel.map(cardHTML).join("")}</div></section>` : ""}`, p.nome);
 
     let qty = 1;
@@ -458,6 +468,78 @@
       if (!end) { res.textContent = "CEP não encontrado."; return; }
       const f = calcularFrete({ tipo: "envio", cidade: end.cidade, uf: end.uf }, (precoDe(p, escolha[p.id] ?? null) || 0) * qty);
       res.innerHTML = `${esc(end.cidade)}/${esc(end.uf)}: <b>${esc(f.texto)}</b>`;
+    });
+  }
+
+  /* ================= LOOKS (clientes usando Lace) ================= */
+  const looksDe = id => LOOKS.filter(l => (l.pins || []).some(pn => pn.produto === id));
+  const arroba = a => String(a || "").trim().replace(/^@?/, "@");
+  function lookTile(l) {
+    const n = (l.pins || []).filter(pn => byId[pn.produto]).length;
+    return `<button class="look" data-look="${esc(l.id)}" aria-label="Ver look${l.autor ? " de " + esc(arroba(l.autor)) : ""}">
+      ${img(l.img, l.legenda || "Cliente usando Lace")}
+      ${n ? `<span class="look-n"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M6 7h12l-1 13H7L6 7Z"/><path d="M9 7a3 3 0 0 1 6 0"/></svg>${n}</span>` : ""}
+      ${l.autor ? `<span class="look-autor">${esc(arroba(l.autor))}</span>` : ""}
+    </button>`;
+  }
+  function renderLooks() {
+    render(`<section class="wrap sec"><div class="sec-head"><span class="eyebrow">Marque @${esc(LOJA.instagram || "lace_watchesbags")} no Instagram</span><h1 class="h1">Vocês de Lace</h1>
+      <p>Clientes usando as nossas peças. Toque na foto e nos pontinhos para ver cada item.</p></div>
+      <div class="looks">${LOOKS.map(lookTile).join("") || `<p class="empty">Em breve, fotos de quem já usa Lace.</p>`}</div></section>`, "Vocês de Lace");
+  }
+  document.addEventListener("click", e => {
+    const t = e.target.closest("[data-look]");
+    if (t) { const l = LOOKS.find(x => x.id === t.dataset.look); if (l) abrirLook(l); }
+  });
+  function abrirLook(l) {
+    const pins = (l.pins || []).filter(pn => byId[pn.produto]);
+    const v = document.createElement("div");
+    v.className = "lookbox";
+    v.innerHTML = `
+      <div class="lookbox-card" role="dialog" aria-modal="true" aria-label="Look">
+        <button class="icon-btn lookbox-x" aria-label="Fechar">✕</button>
+        <div class="lookbox-img">
+          ${img(l.img, l.legenda || "Cliente usando Lace", "", 'loading="eager"')}
+          ${pins.map((pn, i) => `<button class="pin" style="left:${(pn.x * 100).toFixed(2)}%;top:${(pn.y * 100).toFixed(2)}%" data-pin="${i}" aria-label="Ver ${esc(byId[pn.produto].nome)}"><span></span></button>`).join("")}
+          <div class="pin-pop" hidden></div>
+        </div>
+        <div class="lookbox-info">
+          ${l.autor ? `<a class="look-by" href="${esc(l.link || "https://www.instagram.com/" + String(l.autor).replace(/^@/, "") + "/")}" target="_blank" rel="noopener">${esc(arroba(l.autor))}</a>` : ""}
+          ${l.legenda ? `<p>${esc(l.legenda)}</p>` : ""}
+          ${pins.length ? `<span class="opt-label">Peças desta foto</span>
+          <div class="look-itens">${pins.map((pn, i) => { const p = byId[pn.produto]; const o = pn.opt != null ? opcoesDe(p)[pn.opt] : null; return `
+            <a class="look-item" href="#p-${esc(p.id)}" data-item="${i}">${img((p.imagens || [])[0], p.nome)}<span><b>${esc(p.nome)}</b>${o ? `<small>${esc(o.nome)}</small>` : ""}<em>${money(precoDe(p, pn.opt ?? null))}</em></span></a>`; }).join("")}</div>` : ""}
+        </div>
+      </div>`;
+    document.body.appendChild(v);
+    document.body.classList.add("locked");
+    if (DB) DB.aplicarImagens(v);
+    animateCSS(v, "fadeIn"); animateCSS($(".lookbox-card", v), "zoomIn");
+    const fechar = () => { v.remove(); document.body.classList.remove("locked"); document.removeEventListener("keydown", tecla); };
+    const tecla = e => { if (e.key === "Escape") fechar(); };
+    document.addEventListener("keydown", tecla);
+    const pop = $(".pin-pop", v);
+    v.addEventListener("click", e => {
+      if (e.target === v || e.target.closest(".lookbox-x")) return fechar();
+      if (e.target.closest(".look-item") || e.target.closest(".pin-pop a")) { fechar(); return; }
+      const b = e.target.closest("[data-pin]");
+      if (!b) { pop.hidden = true; $$(".pin", v).forEach(x => x.classList.remove("on")); return; }
+      const pn = pins[+b.dataset.pin], p = byId[pn.produto];
+      const ativo = b.classList.contains("on");
+      $$(".pin", v).forEach(x => x.classList.remove("on"));
+      if (ativo) { pop.hidden = true; return; }
+      b.classList.add("on");
+      pop.innerHTML = `<a href="#p-${esc(p.id)}">${img((p.imagens || [])[0], p.nome)}<span><b>${esc(p.nome)}</b><em>${money(precoDe(p, pn.opt ?? null))}</em><small>Ver peça →</small></span></a>`;
+      if (DB) DB.aplicarImagens(pop);
+      pop.style.left = Math.min(Math.max(pn.x * 100, 22), 78) + "%";
+      pop.style.top = (pn.y > .6 ? pn.y * 100 - 4 : pn.y * 100 + 5) + "%";
+      pop.classList.toggle("up", pn.y > .6);
+      pop.hidden = false;
+      // mantém o cartão dentro da foto
+      const caixa = $(".lookbox-img", v).getBoundingClientRect(), r = pop.getBoundingClientRect();
+      const meio = pn.x * caixa.width, meia = r.width / 2;
+      pop.style.left = Math.min(Math.max(meio, meia + 6), caixa.width - meia - 6) + "px";
+      animateCSS(pop, "fadeIn");
     });
   }
 

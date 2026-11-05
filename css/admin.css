@@ -175,3 +175,18 @@ body.locked{ overflow:hidden; }
 }
 
 .op-head span{ font-size:.62rem; letter-spacing:.1em; text-transform:uppercase; color:var(--ink-soft); }
+
+/* ===== clientes usando Lace ===== */
+.looks-adm{ display:grid; grid-template-columns:repeat(auto-fill,minmax(min(100%,300px),1fr)); gap:10px; margin-top:12px; }
+.look-adm{ display:grid; grid-template-columns:76px 1fr; gap:12px; background:var(--card); border:1px solid var(--line); border-radius:6px; padding:10px; align-items:center; }
+.look-adm img{ width:76px; height:94px; object-fit:cover; border-radius:4px; background:var(--soft); }
+.look-adm b{ display:block; } .look-adm small{ display:block; color:var(--ink-soft); font-size:.78rem; margin-bottom:4px; }
+.look-adm .pill{ margin-left:0; } .look-adm .pill.pub{ color:var(--ok); }
+.look-adm-acoes{ grid-column:1/-1; display:flex; gap:6px; flex-wrap:wrap; justify-content:flex-end; }
+.btn-dark.sm{ padding:6px 10px; font-size:.66rem; }
+.ml-foto{ position:relative; background:var(--soft); border-radius:6px; min-height:160px; display:grid; place-items:center; cursor:crosshair; overflow:hidden; }
+.ml-foto img{ width:100%; height:auto; display:block; user-select:none; }
+.pin-adm{ position:absolute; width:24px; height:24px; margin:-12px 0 0 -12px; border-radius:50%; background:var(--accent); color:#fff; font-size:.72rem; font-weight:700; display:grid; place-items:center; box-shadow:0 0 0 3px rgba(255,255,255,.85); pointer-events:none; }
+.pin-row{ display:grid; grid-template-columns:24px 1.4fr 1fr auto; gap:6px; align-items:center; margin-bottom:6px; }
+.pin-row select{ border:1px solid var(--line); border-radius:4px; padding:8px; background:#fff; min-width:0; font-size:.85rem; }
+.pin-num{ width:22px; height:22px; border-radius:50%; background:var(--accent); color:#fff; font-size:.7rem; font-weight:700; display:grid; place-items:center; }

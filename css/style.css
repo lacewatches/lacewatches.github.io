@@ -267,6 +267,43 @@ input,select,textarea{ font:inherit; color:inherit; }
 .toast{ position:fixed; left:50%; bottom:24px; transform:translateX(-50%); z-index:90; background:var(--ink); color:#fff; padding:12px 18px; border-radius:999px; font-size:.82rem; display:flex; align-items:center; gap:12px; box-shadow:var(--shadow); max-width:calc(100% - 32px); --animate-duration:.4s; }
 .toast button{ background:none; border:none; color:var(--sand); font-size:.7rem; letter-spacing:.12em; text-transform:uppercase; text-decoration:underline; white-space:nowrap; }
 
+/* ===== looks (clientes usando Lace) ===== */
+.looks{ display:grid; grid-template-columns:repeat(auto-fill,minmax(200px,1fr)); gap:10px; }
+.look{ position:relative; aspect-ratio:4/5; border:none; padding:0; border-radius:var(--radius); overflow:hidden; background:var(--card); cursor:zoom-in; }
+.look img{ width:100%; height:100%; object-fit:cover; transition:transform .9s; }
+.look:hover img{ transform:scale(1.05); }
+.look-n{ position:absolute; top:10px; right:10px; display:inline-flex; align-items:center; gap:4px; background:rgba(255,255,255,.88); color:var(--ink); font-size:.66rem; font-weight:700; padding:4px 8px; border-radius:999px; }
+.look-n svg{ width:13px; height:13px; }
+.look-autor{ position:absolute; left:10px; bottom:10px; color:#fff; font-size:.72rem; font-weight:600; text-shadow:0 1px 6px rgba(0,0,0,.6); }
+.lookbox{ position:fixed; inset:0; z-index:85; background:rgba(20,14,10,.72); display:grid; place-items:center; padding:16px; --animate-duration:.35s; }
+.lookbox-card{ position:relative; background:var(--bg); border-radius:8px; width:min(980px,100%); max-height:calc(100vh - 32px); overflow:auto; display:grid; grid-template-columns:1.2fr 1fr; }
+.lookbox-x{ position:absolute; top:10px; right:10px; z-index:5; background:#fff !important; border:1px solid var(--line) !important; }
+.lookbox-img{ position:relative; background:#111; align-self:start; }
+.lookbox-img > img{ width:100%; height:auto; display:block; }
+.pin{ position:absolute; width:26px; height:26px; margin:-13px 0 0 -13px; border-radius:50%; border:none; background:rgba(255,255,255,.35); backdrop-filter:blur(2px); display:grid; place-items:center; padding:0; cursor:pointer; transition:transform .25s, background .25s; }
+.pin span{ width:10px; height:10px; border-radius:50%; background:#fff; box-shadow:0 0 0 2px rgba(24,24,24,.35); }
+.pin::after{ content:""; position:absolute; inset:0; border-radius:50%; border:1px solid rgba(255,255,255,.8); animation:pinPulse 2.4s ease-out infinite; }
+.pin:hover,.pin.on{ transform:scale(1.15); background:rgba(255,255,255,.7); }
+@keyframes pinPulse{ 0%{ transform:scale(1); opacity:.9; } 100%{ transform:scale(1.9); opacity:0; } }
+.pin-pop{ position:absolute; z-index:4; transform:translateX(-50%); width:min(230px,80%); background:#fff; border-radius:6px; box-shadow:var(--shadow); padding:8px; }
+.pin-pop.up{ transform:translate(-50%,-100%); }
+.pin-pop a{ display:grid; grid-template-columns:52px 1fr; gap:10px; text-decoration:none; align-items:center; }
+.pin-pop img{ width:52px; height:64px; object-fit:cover; border-radius:3px; }
+.pin-pop b{ display:block; font-family:var(--serif); font-size:1.05rem; font-weight:500; line-height:1.1; }
+.pin-pop em,.look-item em{ display:block; font-style:normal; font-weight:700; font-size:.82rem; }
+.pin-pop small{ color:var(--brown); font-size:.7rem; }
+.lookbox-info{ padding:26px 22px; display:flex; flex-direction:column; gap:10px; min-width:0; }
+.look-by{ font-family:var(--serif); font-size:1.5rem; text-decoration:none; }
+.lookbox-info p{ color:var(--ink-soft); }
+.look-itens{ display:flex; flex-direction:column; gap:8px; }
+.look-item{ display:grid; grid-template-columns:56px 1fr; gap:12px; align-items:center; text-decoration:none; border:1px solid var(--line); border-radius:4px; padding:6px; background:var(--panel); transition:border-color .25s; }
+.look-item:hover{ border-color:var(--gold); }
+.look-item img{ width:56px; height:68px; object-fit:cover; border-radius:3px; }
+.look-item b{ display:block; font-family:var(--serif); font-size:1.1rem; font-weight:500; }
+.look-item small{ display:block; color:var(--ink-soft); font-size:.74rem; }
+@media (prefers-reduced-motion:reduce){ .pin::after{ animation:none; } }
+@media (max-width:760px){ .lookbox-card{ grid-template-columns:1fr; } .looks{ grid-template-columns:repeat(2,minmax(0,1fr)); gap:8px; } }
+
 /* ===== responsivo ===== */
 @media (max-width:980px){
   .topnav{ display:none; } .menu-btn{ display:grid; }
