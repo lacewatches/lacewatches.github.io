@@ -102,7 +102,7 @@ Dica: se o site ficar em branco depois de uma edição, confira se não ficou fa
 
 ## Painel do administrador
 
-Endereço: `https://nery-da.github.io/lace-watches/#admin` (ou `admin.html`). Só o e-mail definido em `firestore.rules` entra.
+Endereço: `https://lacewatches.github.io/#admin` (ou `admin.html`). Só o e-mail definido em `firestore.rules` entra.
 
 - **Início:** faturamento, vendas, ticket médio, pedidos a enviar, mais vendidos e estoque baixo.
 - **Pedidos:** aguardando pagamento → **Marcar como pago** (o estoque baixa) → **Marcar como enviado** (com rastreio) → **Entregue**. Cancelar um pedido pago devolve as peças.
