@@ -282,6 +282,7 @@
       $("#boxImportar").hidden = PRODUTOS.length > 0;
       sujos.clear(); botaoSalvar();
       montarCategorias(); renderProdutos(); preencherVitrine(); preencherConfig();
+      verNovidades();
     } catch (e) { $("#listaProdutos").innerHTML = `<p class="adm-erro">${esc(msgErro(e))}</p>`; }
   }
   function montarCategorias() {
@@ -489,10 +490,52 @@
   });
 
   /* ---------- importar (primeiro acesso) ---------- */
+  const lerCatalogo = () => new Promise((ok, fail) => { const s = document.createElement("script"); s.src = "dados/produtos.js?v=" + Date.now(); s.onload = () => window.LACE_DADOS ? ok(window.LACE_DADOS) : fail(new Error("Arquivo vazio.")); s.onerror = () => fail(new Error("Não encontrei dados/produtos.js.")); document.head.appendChild(s); });
+  /* ---------- novidades: produtos do arquivo que ainda não estão no painel ---------- */
+  let NOV = null;
+  async function verNovidades() {
+    const box = $("#boxNovidades"); box.hidden = true; NOV = null;
+    if (!PRODUTOS.length) return;
+    try {
+      const d = await lerCatalogo(), tem = new Set(PRODUTOS.map(p => p.id)), visto = new Set(CONFIG.catalogoVisto || []);
+      const prods = (d.produtos || []).filter(p => !tem.has(p.id) && !visto.has(p.id));
+      if (!prods.length) return;
+      const catsAtuais = catsDe(), ids = new Set(catsAtuais.map(c => c.id));
+      const cats = (d.categorias || []).filter(c => !ids.has(c.id) && prods.some(p => p.categoria === c.id));
+      NOV = { prods, cats, todas: d.categorias || [] };
+      const porCat = {}; prods.forEach(p => { porCat[p.categoria] = (porCat[p.categoria] || 0) + 1; });
+      const nomeCat = id => ((d.categorias || []).find(c => c.id === id) || {}).nome || id;
+      $("#novTxt").innerHTML = `Há <b>${prods.length}</b> ${prods.length === 1 ? "peça nova" : "peças novas"} no catálogo: ` + Object.entries(porCat).map(([c, n]) => `${n} em ${esc(nomeCat(c))}${cats.some(x => x.id === c) ? " (categoria nova)" : ""}`).join(", ") + ". Os produtos que já estão no painel não mudam.";
+      box.hidden = false;
+    } catch (e) { /* sem arquivo: nada a sugerir */ }
+  }
+  async function marcarVisto(ids) {
+    await db.collection("config").doc("loja").set({ catalogoVisto: [...new Set([...(CONFIG.catalogoVisto || []), ...ids])] }, { merge: true });
+  }
+  $("#btnNovidades").addEventListener("click", async () => {
+    if (!NOV) return; const b = $("#btnNovidades"); b.disabled = true; b.textContent = "Adicionando…";
+    try {
+      const lote = db.batch(), base = PRODUTOS.reduce((m, p) => Math.max(m, p.ordem ?? 0), 0) + 1;
+      NOV.prods.forEach((p, i) => { const { id, ...r } = p; lote.set(db.collection("produtos").doc(id), { ...r, ordem: base + i, estoque: r.estoque || {} }); });
+      if (NOV.cats.length) {
+        const atual = catsDe().map(c => ({ ...c })), ordemArq = NOV.todas.map(c => c.id);
+        NOV.cats.forEach(c => { const depois = ordemArq.slice(ordemArq.indexOf(c.id) + 1); const k = atual.findIndex(x => depois.includes(x.id)); if (k < 0) atual.push({ ...c }); else atual.splice(k, 0, { ...c }); });
+        lote.set(db.collection("config").doc("loja"), { categorias: atual }, { merge: true });
+      }
+      await lote.commit(); await marcarVisto(NOV.prods.map(p => p.id));
+      toast(`${NOV.prods.length} peças adicionadas.`); await carregarProdutos();
+    } catch (e) { toast(msgErro(e), true); }
+    b.disabled = false; b.textContent = "Adicionar ao painel";
+  });
+  $("#btnNovIgnorar").addEventListener("click", async () => {
+    if (!NOV) return;
+    try { await marcarVisto(NOV.prods.map(p => p.id)); CONFIG.catalogoVisto = [...(CONFIG.catalogoVisto || []), ...NOV.prods.map(p => p.id)]; $("#boxNovidades").hidden = true; toast("Ok, não vou mostrar de novo."); }
+    catch (e) { toast(msgErro(e), true); }
+  });
   $("#btnImportar").addEventListener("click", async () => {
     const b = $("#btnImportar"); b.disabled = true; b.textContent = "Importando…";
     try {
-      const d = await new Promise((ok, fail) => { const s = document.createElement("script"); s.src = "dados/produtos.js?v=" + Date.now(); s.onload = () => window.LACE_DADOS ? ok(window.LACE_DADOS) : fail(new Error("Arquivo vazio.")); s.onerror = () => fail(new Error("Não encontrei dados/produtos.js.")); document.head.appendChild(s); });
+      const d = await lerCatalogo();
       const lote = db.batch();
       (d.produtos || []).forEach((p, i) => { const { id, ...r } = p; lote.set(db.collection("produtos").doc(id), { ...r, ordem: i, estoque: r.estoque || {} }); });
       lote.set(db.collection("config").doc("loja"), { loja: d.loja || {}, categorias: d.categorias || [] }, { merge: true });

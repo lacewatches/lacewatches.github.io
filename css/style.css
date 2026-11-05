@@ -332,3 +332,88 @@ input,select,textarea{ font:inherit; color:inherit; }
 }
 @media (prefers-reduced-motion:reduce){ .card.pre{ opacity:1 !important; } *{ transition:none !important; } }
 button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible{ outline:2px solid var(--gold); outline-offset:2px; }
+
+/* ==========================================================
+   VISUAL B · SUAVE — cantos arredondados, pílulas, sombras leves
+   ========================================================== */
+:root{ --radius:18px; --r-md:14px; --r-sm:10px; --shadow-soft:0 14px 32px -20px rgba(58,42,26,.45); }
+.search{ border-radius:999px; }
+.btn-dark,.btn-line,.btn-light,.btn-wpp,.btn-add,.btn-emb{ border-radius:999px; }
+.slides{ border-radius:0 0 28px 28px; }
+.perks{ border-radius:var(--radius); overflow:hidden; }
+.cat{ border-radius:22px; }
+.cat span{ left:50%; transform:translateX(-50%); white-space:nowrap; }
+/* cards: sem borda, foto recuada com cantos próprios */
+.card{ background:var(--panel); border:none; border-radius:20px; box-shadow:var(--shadow-soft); }
+.card:hover{ box-shadow:0 22px 44px -22px rgba(58,42,26,.55); }
+.card-media{ margin:6px 6px 0; border-radius:15px; background:var(--card); isolation:isolate; }
+.card-info{ border-top:none; padding:12px 14px 14px; }
+.tag{ top:10px; left:10px; }
+.gal-main{ border-radius:22px; }
+.thumbs button{ border-radius:10px; }
+.ship input,.co input:not([type=radio]),.co textarea,.cupom input{ border-radius:12px; }
+.co select{ border-radius:12px; }
+.radio{ border-radius:14px; }
+.co-box,.co-sum,.pay-box,.ped-box,.ped-row,.emb-box,.ok-banner{ border-radius:20px; }
+.emb-card,.look-item{ border-radius:14px; }
+.ci img,.si img,.emb-card img,.look-item img,.pin-pop img{ border-radius:10px; }
+.emb-tile img{ border-radius:16px; }
+.qr{ border-radius:14px; }
+.copy textarea{ border-radius:12px; }
+.drawer{ border-radius:24px 0 0 24px; } .side-menu{ border-radius:0 24px 24px 0; }
+.look{ border-radius:20px; }
+.lookbox-card{ border-radius:24px; }
+.pin-pop{ border-radius:14px; }
+.hero-media img{ border-radius:22px; }
+@media (max-width:760px){
+  .card{ border-radius:16px; } .card-media{ margin:5px 5px 0; border-radius:12px; }
+  .cat{ border-radius:18px; }
+  .slides{ border-radius:0 0 22px 22px; }
+  .drawer{ border-radius:0; }
+}
+
+/* ===== movimento ===== */
+html.lenis, html.lenis body{ height:auto; }
+.lenis:not(.lenis-autoToggle).lenis-stopped{ overflow:clip; }
+html.lenis{ scroll-behavior:auto; }
+/* transições entre páginas */
+.topbar{ view-transition-name:topo; }
+.wpp-float{ view-transition-name:wpp; }
+::view-transition-old(root){ animation:.28s ease both vt-sai; }
+::view-transition-new(root){ animation:.42s cubic-bezier(.2,.7,.2,1) both vt-entra; }
+::view-transition-group(foto-produto){ animation-duration:.55s; animation-timing-function:cubic-bezier(.3,.7,.1,1); }
+::view-transition-image-pair(foto-produto){ isolation:auto; }
+::view-transition-old(foto-produto),::view-transition-new(foto-produto){ animation:none; mix-blend-mode:normal; height:100%; object-fit:cover; overflow:clip; }
+@keyframes vt-sai{ to{ opacity:0; } }
+@keyframes vt-entra{ from{ opacity:0; transform:translateY(14px); } }
+/* revelar ao rolar */
+.rv{ opacity:0; transform:translateY(22px); transition:opacity .8s cubic-bezier(.2,.7,.2,1) var(--rv-d,0ms), transform .8s cubic-bezier(.2,.7,.2,1) var(--rv-d,0ms); }
+.rv.rv-on{ opacity:1; transform:none; }
+/* carrosséis */
+.rail{ position:relative; }
+.rail-track{ display:grid; grid-auto-flow:column; grid-template-columns:none !important; grid-auto-columns:calc((100% - 3 * clamp(14px,2.2vw,28px)) / 4); overflow-x:auto; overscroll-behavior-x:contain; scroll-snap-type:x mandatory; scrollbar-width:none; padding:6px 2px 26px; margin:-6px -2px -20px; cursor:grab; }
+.rail-track::-webkit-scrollbar{ display:none; }
+.rail-track > *{ scroll-snap-align:start; }
+.rail-track.arrastando{ cursor:grabbing; scroll-snap-type:none; user-select:none; }
+.rail-track.arrastando *{ pointer-events:none; }
+.rail-track.looks{ grid-auto-columns:calc((100% - 3 * 10px) / 4); gap:10px; }
+.rail-prev,.rail-next{ position:absolute; top:38%; z-index:5; width:44px; height:44px; border-radius:50%; border:1px solid var(--line); background:rgba(255,255,255,.95); box-shadow:var(--shadow-soft); font-size:1.6rem; line-height:1; color:var(--ink); display:grid; place-items:center; padding-bottom:3px; transition:opacity .3s, transform .3s; }
+.rail-prev{ left:-18px; } .rail-next{ right:-18px; }
+.rail-prev:hover,.rail-next:hover{ transform:scale(1.08); }
+.rail-prev:disabled,.rail-next:disabled,.rail.sem-setas .rail-prev,.rail.sem-setas .rail-next{ opacity:0; pointer-events:none; }
+/* zoom da galeria */
+.gal-main.zoomavel{ cursor:zoom-in; touch-action:pan-y; }
+.gal-main.zoomavel::after{ content:""; position:absolute; right:14px; bottom:14px; width:40px; height:40px; border-radius:50%; background:rgba(255,255,255,.92) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23181818' stroke-width='1.7' stroke-linecap='round'%3E%3Ccircle cx='11' cy='11' r='6.5'/%3E%3Cpath d='M16 16l4 4M11 8.5v5M8.5 11h5'/%3E%3C/svg%3E") center/20px no-repeat; box-shadow:var(--shadow-soft); pointer-events:none; }
+.slides{ touch-action:pan-y; }
+.pswp{ --pswp-bg:#120d09; }
+@media (max-width:1000px){ .rail-track{ grid-auto-columns:calc((100% - 2 * 16px) / 2.6); } .rail-track.looks{ grid-auto-columns:calc((100% - 2 * 10px) / 2.6); } }
+@media (max-width:760px){
+  .rail-track{ grid-auto-columns:64%; gap:12px; padding-left:max(16px,4vw); padding-right:max(16px,4vw); margin-left:calc(-1 * max(16px,4vw)); margin-right:calc(-1 * max(16px,4vw)); scroll-padding-left:max(16px,4vw); }
+  .rail-track.looks{ grid-auto-columns:46%; gap:8px; }
+  .rail-prev,.rail-next{ display:none; }
+}
+@media (prefers-reduced-motion:reduce){ .rv{ opacity:1; transform:none; transition:none; } }
+/* correções: barra de filtros e aviso no celular */
+.toolbar > *{ min-width:0; max-width:100%; }
+.toast{ width:max-content; max-width:calc(100vw - 32px); }
+.toast > span:first-child{ min-width:0; }

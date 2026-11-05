@@ -230,12 +230,19 @@
     app.innerHTML = html;
     document.title = titulo ? `${titulo} · Lace Watches & Bags` : "Lace Watches & Bags";
     if (DB) DB.aplicarImagens(app);
-    animateCSS(app, "fadeIn");
+    if (!document.documentElement.classList.contains("vt")) animateCSS(app, "fadeIn");
     animarCards(app);
+    if (window.LaceMotion) LaceMotion.depois(app);
   }
-  const topo = () => window.scrollTo({ top: 0, behavior: "instant" in window ? "instant" : "auto" });
+  const topo = () => window.LaceMotion ? LaceMotion.topo() : window.scrollTo({ top: 0, behavior: "instant" in window ? "instant" : "auto" });
+  const rail = (itens, cls = "grid") => `<div class="rail"><button class="rail-prev" aria-label="Anterior">‹</button><div class="rail-track ${cls}">${itens}</div><button class="rail-next" aria-label="Próximo">›</button></div>`;
 
   function route() {
+    const h = decodeURIComponent(location.hash.slice(1));
+    if (window.LaceMotion && LaceMotion.pronto) LaceMotion.navegar(rotaAgora, h.startsWith("p-"));
+    else { rotaAgora(); if (window.LaceMotion) LaceMotion.pronto = true; }
+  }
+  function rotaAgora() {
     const h = decodeURIComponent(location.hash.slice(1));
     fecharMenu(); fecharSacola(true);
     clearInterval(timerPedido);
@@ -263,7 +270,7 @@
     const lista1 = (destaques.length ? destaques : vitrine.filter(p => p.selo).concat(vitrine)).filter((p, i, a) => a.indexOf(p) === i).slice(0, 8);
     const cats = CATS.filter(c => c.id !== EMB && vitrine.some(p => p.categoria === c.id));
     const embs = PRODUTOS.filter(p => p.categoria === EMB && p.disponivel !== false);
-    const capaCat = id => (vitrine.find(p => p.categoria === id && (p.imagens || [])[0]) || {}).imagens?.[0];
+    const capaCat = id => ((CATS.find(c => c.id === id) || {}).capa) || (vitrine.find(p => p.categoria === id && (p.imagens || [])[0]) || {}).imagens?.[0];
     const v = Number(PAG.pixDesconto) || 0;
 
     render(`
@@ -285,7 +292,7 @@
             <div class="hero-text">
               <span class="eyebrow">Nova coleção</span>
               <h1>Elegância, precisão<br><em>e personalidade</em></h1>
-              <p>Relógios, bolsas e cintos escolhidos peça por peça.</p>
+              <p>Relógios, bolsas, bijuterias e cintos escolhidos peça por peça.</p>
               <a href="#colecao" class="btn-dark">Comprar agora</a>
             </div>
             <div class="hero-media">
@@ -312,21 +319,21 @@
 
       <section class="wrap sec">
         <div class="sec-head row"><h2>${esc(VIT.destaquesTitulo || "As queridinhas")}</h2><a href="#colecao" class="more">Ver tudo</a></div>
-        <div class="grid">${lista1.map(cardHTML).join("")}</div>
+        ${rail(lista1.map(cardHTML).join(""))}
       </section>
 
       ${LOOKS.length ? `
       <section class="wrap sec">
         <div class="sec-head row"><div><span class="eyebrow">Marque @${esc(LOJA.instagram || "lace_watchesbags")}</span><h2>Vocês de Lace</h2></div><a href="#looks" class="more">Ver todas</a></div>
-        <div class="looks">${LOOKS.slice(0, 8).map(lookTile).join("")}</div>
+        ${rail(LOOKS.slice(0, 10).map(lookTile).join(""), "looks")}
       </section>` : ""}
 
       ${cats.slice(0, 3).map(c => {
-        const ps = vitrine.filter(p => p.categoria === c.id).slice(0, 4);
+        const ps = vitrine.filter(p => p.categoria === c.id).slice(0, 10);
         return ps.length ? `
         <section class="wrap sec">
           <div class="sec-head row"><h2>${esc(c.nome)}</h2><a href="#c-${esc(c.id)}" class="more">Ver todos</a></div>
-          <div class="grid">${ps.map(cardHTML).join("")}</div>
+          ${rail(ps.map(cardHTML).join(""))}
         </section>` : "";
       }).join("")}
 
@@ -357,6 +364,7 @@
     let i = 0;
     const ir = n => { i = (n + slides.length) % slides.length; slides.forEach((s, k) => s.classList.toggle("on", k === i)); dots.forEach((d, k) => d.classList.toggle("on", k === i)); };
     dots.forEach(d => d.addEventListener("click", () => { ir(+d.dataset.slide); clearInterval(timerSlide); }));
+    if (window.LaceMotion) LaceMotion.swipe(box, () => { ir(i + 1); clearInterval(timerSlide); }, () => { ir(i - 1); clearInterval(timerSlide); });
     timerSlide = setInterval(() => { if (!document.body.contains(box)) return clearInterval(timerSlide); ir(i + 1); }, 6000);
   }
 
@@ -395,7 +403,7 @@
     if (!p) { render(`<section class="wrap sec"><p class="empty">Produto não encontrado. <a href="#colecao">Ver a coleção</a></p></section>`); return; }
     const ops = opcoesDe(p), imgs = p.imagens || [];
     const esg = semEstoque(p);
-    const rel = PRODUTOS.filter(x => x.id !== p.id && x.categoria === p.categoria && !semEstoque(x)).slice(0, 4);
+    const rel = PRODUTOS.filter(x => x.id !== p.id && x.categoria === p.categoria && !semEstoque(x)).slice(0, 10);
     render(`
       <nav class="wrap crumbs"><a href="#">Início</a> / <a href="#c-${esc(p.categoria)}">${esc(catNome(p.categoria))}</a> / <span>${esc(p.nome)}</span></nav>
       <section class="wrap prod">
@@ -434,14 +442,26 @@
           </ul>
         </div>
       </section>
-      ${looksDe(p.id).length ? `<section class="wrap sec"><div class="sec-head"><span class="eyebrow">Na vida real</span><h2>Quem já usa</h2></div><div class="looks">${looksDe(p.id).slice(0, 8).map(lookTile).join("")}</div></section>` : ""}
-      ${rel.length ? `<section class="wrap sec"><div class="sec-head row"><h2>Você também pode gostar</h2></div><div class="grid">${rel.map(cardHTML).join("")}</div></section>` : ""}`, p.nome);
+      ${looksDe(p.id).length ? `<section class="wrap sec"><div class="sec-head"><span class="eyebrow">Na vida real</span><h2>Quem já usa</h2></div>${rail(looksDe(p.id).slice(0, 10).map(lookTile).join(""), "looks")}</section>` : ""}
+      ${rel.length ? `<section class="wrap sec"><div class="sec-head row"><h2>Você também pode gostar</h2></div>${rail(rel.map(cardHTML).join(""))}</section>` : ""}`, p.nome);
 
     let qty = 1;
     const att = () => {
       $("#pPrice").innerHTML = precoBloco(p, escolha[p.id] ?? null);
       $("#pStock").textContent = avisoEstoque(p);
     };
+    const fotoAtual = () => Math.max(0, $$("[data-thumb]").findIndex(x => x.classList.contains("on")));
+    const irFoto = n => { const t = $$("[data-thumb]"); if (t.length) t[(n + t.length) % t.length].click(); };
+    const gm = $(".gal-main");
+    if (gm && imgs.length) {
+      gm.classList.add("zoomavel");
+      gm.addEventListener("click", async e => {
+        if (e.target.closest("[data-fav]") || !window.LaceMotion || Date.now() - (gm._arrastou || 0) < 400) return;
+        const fontes = await Promise.all(imgs.map(r => DB ? DB.imagem(r) : r));
+        LaceMotion.zoom(fontes.filter(Boolean), fotoAtual());
+      });
+      if (window.LaceMotion && imgs.length > 1) LaceMotion.swipe(gm, () => irFoto(fotoAtual() + 1), () => irFoto(fotoAtual() - 1));
+    }
     $$("[data-thumb]").forEach(b => b.addEventListener("click", () => {
       $$("[data-thumb]").forEach(x => x.classList.toggle("on", x === b));
       const g = $("#galImg"); g.setAttribute("data-src", b.dataset.thumb); DB ? DB.aplicarImagens(g.parentElement) : (g.src = b.dataset.thumb);

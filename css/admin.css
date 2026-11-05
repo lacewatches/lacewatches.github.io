@@ -190,3 +190,12 @@ body.locked{ overflow:hidden; }
 .pin-row{ display:grid; grid-template-columns:24px 1.4fr 1fr auto; gap:6px; align-items:center; margin-bottom:6px; }
 .pin-row select{ border:1px solid var(--line); border-radius:4px; padding:8px; background:#fff; min-width:0; font-size:.85rem; }
 .pin-num{ width:22px; height:22px; border-radius:50%; background:var(--accent); color:#fff; font-size:.7rem; font-weight:700; display:grid; place-items:center; }
+
+/* ===== visual B · Suave ===== */
+.adm-card,.kpi,.prod,.pedido,.look-adm,.banner-row{ border-radius:18px; }
+.modal-card{ border-radius:22px; }
+.btn-dark,.btn-ok,.btn-ghost{ border-radius:999px; }
+.adm-form input,.adm-form textarea,.adm-form select,.campos input[type=number],.op-row input,.banner-txt input,.banner-txt select,.cat-row input,.cupom-new input,.cupom-new select,.pin-row select,.confirma input.rastreio{ border-radius:12px; }
+.confirma,.estoques{ border-radius:12px; }
+.prod img,.look-adm img,.banner-img img,.foto{ border-radius:12px; }
+.ml-foto{ border-radius:16px; }
