@@ -275,6 +275,7 @@
 
     render(`
       <section class="hero">
+        ${LOOKS.length ? dobraHTML() : ""}
         ${banners.length ? `
           <div class="slides" id="slides">
             ${banners.map((b, i) => `
@@ -352,6 +353,38 @@
         <a href="https://www.instagram.com/${esc(LOJA.instagram || "lace_watchesbags")}/" target="_blank" rel="noopener">@${esc(LOJA.instagram || "lace_watchesbags")}</a>
       </section>`);
     iniciarSlides();
+    iniciarDobra();
+  }
+
+  /* ---------- cantinho dobrado: a folha vira e mostra as clientes ---------- */
+  function dobraHTML() {
+    const ls = LOOKS.slice(0, 4), capa = ls[0];
+    return `<div class="dobra" id="dobra">
+      <div class="dobra-sob">
+        ${img(capa.img, "", "dobra-fundo")}
+        <div class="dobra-cont">
+          <div class="dobra-top"><span class="eyebrow">Marque @${esc(LOJA.instagram || "lace_watchesbags")}</span><button class="dobra-x" aria-label="Fechar">✕</button></div>
+          <h3>Vocês de Lace</h3>
+          <div class="dobra-looks n${ls.length}">${ls.map(lookTile).join("")}</div>
+          <a href="#looks" class="more">Ver todas</a>
+        </div>
+      </div>
+      <div class="dobra-aba" aria-hidden="true"></div>
+      <button class="dobra-gatilho" aria-label="Ver fotos de quem usa Lace" aria-expanded="false"></button>
+    </div>`;
+  }
+  function iniciarDobra() {
+    const d = $("#dobra"); if (!d) return;
+    const g = $(".dobra-gatilho", d), toque = matchMedia("(hover: none)").matches;
+    const abrir = v => { d.classList.toggle("aberta", v); g.setAttribute("aria-expanded", v); };
+    if (!toque) {
+      d.addEventListener("mouseenter", () => abrir(true));
+      d.addEventListener("mouseleave", () => abrir(false));
+    }
+    g.addEventListener("click", () => abrir(!d.classList.contains("aberta")));
+    $(".dobra-x", d).addEventListener("click", e => { e.stopPropagation(); abrir(false); });
+    document.addEventListener("click", e => { if (!d.contains(e.target)) abrir(false); });
+    document.addEventListener("keydown", e => { if (e.key === "Escape") abrir(false); });
   }
 
   let timerSlide;

@@ -422,3 +422,34 @@ html.lenis{ scroll-behavior:auto; }
 .footer-links a{ display:inline-flex; align-items:center; gap:8px; border:1px solid var(--line); border-bottom:1px solid var(--line); background:var(--panel); border-radius:999px; padding:9px 16px 9px 12px; transition:border-color .25s, color .25s, transform .25s; }
 .footer-links a:hover{ border-color:var(--gold); color:var(--brown); transform:translateY(-1px); }
 .footer-links svg{ width:17px; height:17px; fill:none; stroke:currentColor; stroke-width:1.5; stroke-linecap:round; stroke-linejoin:round; flex:none; color:var(--brown); }
+
+/* ===== cantinho dobrado (Vocês de Lace no topo) ===== */
+@property --dobra{ syntax:"<length>"; inherits:true; initial-value:70px; }
+.dobra{ --dobra:70px; --w:min(380px,92vw); overflow:hidden; border-radius:0 0 26px 0; position:absolute; top:0; left:0; z-index:6; width:var(--w); height:min(100%,620px); pointer-events:none; transition:--dobra 1.4s cubic-bezier(.5,.05,.3,1); }
+.dobra.aberta{ --dobra:1020px; }
+.dobra-sob{ position:absolute; inset:0; overflow:hidden; border-radius:0 0 26px 0; clip-path:polygon(0 0, var(--dobra) 0, 0 var(--dobra)); background:var(--ink); }
+.dobra-fundo{ position:absolute; inset:0; width:100%; height:100%; object-fit:cover; filter:saturate(.9); transform:scale(1.05); }
+.dobra-cont{ position:relative; height:100%; display:flex; flex-direction:column; gap:12px; padding:22px 22px 24px; background:linear-gradient(180deg,rgba(247,245,240,.97),rgba(247,245,240,.94)); opacity:0; transition:opacity .35s .15s; overflow:auto; }
+.dobra.aberta .dobra-cont{ opacity:1; }
+.dobra.aberta .dobra-sob, .dobra.aberta .dobra-cont{ pointer-events:auto; }
+.dobra-top{ display:flex; justify-content:space-between; align-items:center; gap:8px; }
+.dobra-x{ width:32px; height:32px; border-radius:50%; border:1px solid var(--line); background:#fff; font-size:.8rem; }
+.dobra-cont h3{ font-family:var(--serif); font-weight:400; font-size:2rem; line-height:1; }
+.dobra-looks{ display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+.dobra-looks.n1{ grid-template-columns:1fr; } .dobra-looks.n1 .look{ aspect-ratio:4/4.6; }
+.dobra-looks .look{ border-radius:14px; }
+.dobra-cont .more{ align-self:flex-start; margin-top:auto; }
+/* a "orelha": verso da folha dobrada */
+.dobra-aba{ position:absolute; top:0; left:0; width:var(--dobra); height:var(--dobra); pointer-events:none; filter:drop-shadow(4px 5px 7px rgba(40,28,18,.32)); }
+.dobra-aba::before{ content:""; position:absolute; inset:0; clip-path:polygon(100% 0, 100% 100%, 0 100%); background:linear-gradient(135deg, #CFC3AF 50%, #F3EEE5 66%, #FBF9F5 80%, #E4DCCD 100%); }
+.dobra-gatilho{ position:absolute; top:0; left:0; width:86px; height:86px; border:none; background:transparent; padding:0; cursor:pointer; pointer-events:auto; clip-path:polygon(0 0,100% 0,0 100%); }
+.dobra.aberta .dobra-gatilho{ pointer-events:none; }
+.dobra:not(.aberta){ animation:dobraRespira 4.5s ease-in-out 2s infinite; }
+@keyframes dobraRespira{ 0%,100%{ --dobra:70px; } 50%{ --dobra:82px; } }
+@media (max-width:760px){
+  .dobra{ --dobra:56px; height:min(100%,560px); }
+  .dobra.aberta{ --dobra:1020px; }
+  @keyframes dobraRespira{ 0%,100%{ --dobra:56px; } 50%{ --dobra:66px; } }
+}
+@media (prefers-reduced-motion:reduce){ .dobra{ transition:none; } .dobra:not(.aberta){ animation:none; } }
+.dobra:not(.aberta) .dobra-sob, .dobra:not(.aberta) .dobra-sob *{ pointer-events:none !important; }
