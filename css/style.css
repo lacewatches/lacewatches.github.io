@@ -423,33 +423,70 @@ html.lenis{ scroll-behavior:auto; }
 .footer-links a:hover{ border-color:var(--gold); color:var(--brown); transform:translateY(-1px); }
 .footer-links svg{ width:17px; height:17px; fill:none; stroke:currentColor; stroke-width:1.5; stroke-linecap:round; stroke-linejoin:round; flex:none; color:var(--brown); }
 
-/* ===== cantinho dobrado (Vocês de Lace no topo) ===== */
+/* ===== cantinho dobrado → álbum "Vocês de Lace" no topo ===== */
 @property --dobra{ syntax:"<length>"; inherits:true; initial-value:70px; }
-.dobra{ --dobra:70px; --w:min(380px,92vw); overflow:hidden; border-radius:0 0 26px 0; position:absolute; top:0; left:0; z-index:6; width:var(--w); height:min(100%,620px); pointer-events:none; transition:--dobra 1.4s cubic-bezier(.5,.05,.3,1); }
-.dobra.aberta{ --dobra:1020px; }
-.dobra-sob{ position:absolute; inset:0; overflow:hidden; border-radius:0 0 26px 0; clip-path:polygon(0 0, var(--dobra) 0, 0 var(--dobra)); background:var(--ink); }
-.dobra-fundo{ position:absolute; inset:0; width:100%; height:100%; object-fit:cover; filter:saturate(.9); transform:scale(1.05); }
-.dobra-cont{ position:relative; height:100%; display:flex; flex-direction:column; gap:12px; padding:22px 22px 24px; background:linear-gradient(180deg,rgba(247,245,240,.97),rgba(247,245,240,.94)); opacity:0; transition:opacity .35s .15s; overflow:auto; }
-.dobra.aberta .dobra-cont{ opacity:1; }
-.dobra.aberta .dobra-sob, .dobra.aberta .dobra-cont{ pointer-events:auto; }
-.dobra-top{ display:flex; justify-content:space-between; align-items:center; gap:8px; }
-.dobra-x{ width:32px; height:32px; border-radius:50%; border:1px solid var(--line); background:#fff; font-size:.8rem; }
-.dobra-cont h3{ font-family:var(--serif); font-weight:400; font-size:2rem; line-height:1; }
-.dobra-looks{ display:grid; grid-template-columns:1fr 1fr; gap:8px; }
-.dobra-looks.n1{ grid-template-columns:1fr; } .dobra-looks.n1 .look{ aspect-ratio:4/4.6; }
-.dobra-looks .look{ border-radius:14px; }
-.dobra-cont .more{ align-self:flex-start; margin-top:auto; }
-/* a "orelha": verso da folha dobrada */
-.dobra-aba{ position:absolute; top:0; left:0; width:var(--dobra); height:var(--dobra); pointer-events:none; filter:drop-shadow(4px 5px 7px rgba(40,28,18,.32)); }
-.dobra-aba::before{ content:""; position:absolute; inset:0; clip-path:polygon(100% 0, 100% 100%, 0 100%); background:linear-gradient(135deg, #CFC3AF 50%, #F3EEE5 66%, #FBF9F5 80%, #E4DCCD 100%); }
-.dobra-gatilho{ position:absolute; top:0; left:0; width:86px; height:86px; border:none; background:transparent; padding:0; cursor:pointer; pointer-events:auto; clip-path:polygon(0 0,100% 0,0 100%); }
-.dobra.aberta .dobra-gatilho{ pointer-events:none; }
-.dobra:not(.aberta){ animation:dobraRespira 4.5s ease-in-out 2s infinite; }
-@keyframes dobraRespira{ 0%,100%{ --dobra:70px; } 50%{ --dobra:82px; } }
+.hero{ isolation:isolate; }
+.dobra{ --dobra:70px; position:absolute; inset:0; z-index:6; overflow:hidden; pointer-events:none; transition:--dobra 1.1s cubic-bezier(.55,.05,.25,1); }
+.dobra.espia{ --dobra:130px; transition-duration:.45s; }
+.dobra.puxando{ transition:none; }
+.dobra-sob{ position:absolute; inset:0; clip-path:polygon(0 0, var(--dobra) 0, 0 var(--dobra)); background:#2A211B; }
+.dobra-fundo{ position:absolute; inset:-30px; width:calc(100% + 60px); height:calc(100% + 60px); object-fit:cover; filter:blur(18px) brightness(.55) saturate(.9); }
+.dobra-sob::after{ content:""; position:absolute; inset:0; background:radial-gradient(120% 90% at 50% 40%, rgba(42,33,27,.15), rgba(24,18,14,.75)); }
+/* verso da folha */
+.dobra-aba{ position:absolute; top:0; left:0; width:var(--dobra); height:var(--dobra); pointer-events:none; filter:drop-shadow(5px 6px 9px rgba(30,20,12,.35)); }
+.dobra-aba::before{ content:""; position:absolute; inset:0; clip-path:polygon(100% 0, 100% 100%, 0 100%); background:linear-gradient(135deg, #CFC3AF 50%, #F3EEE5 64%, #FBF9F5 78%, #E4DCCD 100%); }
+.dobra.aberta .dobra-aba{ opacity:0; transition:opacity .3s .8s; }
+.dobra-gatilho{ position:absolute; top:0; left:0; width:110px; height:110px; border:none; background:transparent; padding:0; cursor:grab; pointer-events:auto; clip-path:polygon(0 0,100% 0,0 100%); touch-action:none; }
+.dobra-gatilho span{ position:absolute; top:16px; left:12px; font-size:.55rem; letter-spacing:.22em; text-transform:uppercase; color:#fff; opacity:0; transition:opacity .3s; }
+.dobra.espia .dobra-gatilho span{ opacity:.85; }
+.dobra.puxando .dobra-gatilho{ cursor:grabbing; width:100%; height:100%; clip-path:none; }
+.dobra.aberta .dobra-gatilho{ display:none; }
+.dobra:not(.aberta):not(.espia):not(.puxando){ animation:dobraRespira 4.5s ease-in-out 2s infinite; }
+@keyframes dobraRespira{ 0%,100%{ --dobra:70px; } 50%{ --dobra:84px; } }
+/* palco do álbum */
+.album-palco{ position:relative; z-index:2; height:100%; display:flex; flex-direction:column; padding:18px max(16px,4vw) 16px; gap:10px; opacity:0; transition:opacity .4s .55s; }
+.dobra.aberta .album-palco{ opacity:1; pointer-events:auto; }
+.dobra.aberta .dobra-sob{ pointer-events:auto; }
+.album-topo{ display:flex; justify-content:space-between; align-items:center; max-width:1240px; width:100%; margin:0 auto; }
+.album-topo .eyebrow{ color:#E9DCC6; } .album-topo .eyebrow::before,.album-topo .eyebrow::after{ background:var(--gold); }
+.dobra-x{ width:40px; height:40px; border-radius:50%; border:1px solid rgba(255,255,255,.35); background:rgba(255,255,255,.12); color:#fff; font-size:.9rem; backdrop-filter:blur(6px); }
+.album-livro{ flex:1; min-height:0; display:grid; place-items:center; }
+.album-livro .stf__parent{ margin:0 auto; }
+.album-nav{ display:flex; justify-content:center; align-items:center; gap:18px; color:#E9DCC6; font-size:.7rem; letter-spacing:.16em; text-transform:uppercase; }
+.album-nav button{ width:42px; height:42px; border-radius:50%; border:1px solid rgba(255,255,255,.35); background:rgba(255,255,255,.1); color:#fff; font-size:1.5rem; line-height:1; padding-bottom:3px; transition:opacity .3s, transform .2s; }
+.album-nav button:hover{ transform:scale(1.07); } .album-nav button:disabled{ opacity:.25; }
+.dobra.folheou .album-dica{ opacity:.45; }
+/* páginas */
+.pg{ background:#FBF8F2; color:var(--ink); }
+.pg-in{ position:relative; height:100%; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:12px; padding:7% 8%; text-align:center;
+  background:linear-gradient(90deg, rgba(0,0,0,.05), transparent 7%), radial-gradient(130% 100% at 50% 0%, #FFFDF8, #F3EEE3); }
+.pg-capa .pg-in{ background:linear-gradient(145deg,#2B211B,#16110D); color:#F3E9D8; border:1px solid #3a2e25; }
+.pg-capa h3{ font-family:var(--serif); font-weight:300; font-size:clamp(2.2rem,6vw,3.2rem); line-height:.95; }
+.pg-capa h3 em{ color:var(--gold); }
+.pg-capa p{ font-size:.72rem; letter-spacing:.2em; text-transform:uppercase; opacity:.75; }
+.pg-marca{ font-family:var(--serif); letter-spacing:.5em; font-size:.9rem; color:var(--gold); padding-left:.5em; }
+.pg-seta{ position:absolute; bottom:7%; font-size:.66rem; letter-spacing:.2em; text-transform:uppercase; opacity:.6; }
+.polaroid{ background:#fff; padding:5.5% 5.5% 0; width:86%; box-shadow:0 10px 24px -12px rgba(40,28,18,.5), 0 1px 3px rgba(0,0,0,.12); transform:rotate(-1.6deg); position:relative; }
+.polaroid.dir{ transform:rotate(1.4deg); }
+.polaroid::before,.polaroid::after{ content:""; position:absolute; top:-9px; width:56px; height:18px; background:rgba(214,196,160,.55); }
+.polaroid::before{ left:-14px; transform:rotate(-38deg); } .polaroid::after{ right:-14px; transform:rotate(38deg); }
+.polaroid img{ width:100%; aspect-ratio:4/5; object-fit:cover; display:block; }
+.polaroid figcaption{ font-family:var(--serif); font-style:italic; font-size:1.15rem; padding:8px 4px 12px; color:var(--brown); }
+.polaroid figcaption small{ display:block; font-style:normal; font-family:var(--sans); font-size:.7rem; color:var(--ink-soft); margin-top:2px; }
+.pg-ver{ border:1px solid var(--ink); background:transparent; border-radius:999px; padding:8px 16px; font-size:.62rem; letter-spacing:.14em; text-transform:uppercase; }
+.pg-ver:hover{ background:var(--ink); color:#fff; }
+.pg-num{ position:absolute; bottom:4%; font-family:var(--serif); font-size:.85rem; color:var(--ink-soft); }
+.pg-fim h4{ font-family:var(--serif); font-weight:400; font-size:1.6rem; line-height:1.15; max-width:16ch; }
+.pg-fim .btn-dark{ padding:12px 20px; }
 @media (max-width:760px){
-  .dobra{ --dobra:56px; height:min(100%,560px); }
-  .dobra.aberta{ --dobra:1020px; }
-  @keyframes dobraRespira{ 0%,100%{ --dobra:56px; } 50%{ --dobra:66px; } }
+  .dobra{ --dobra:58px; }
+  .dobra.espia{ --dobra:58px; }
+  @keyframes dobraRespira{ 0%,100%{ --dobra:58px; } 50%{ --dobra:70px; } }
+  .hero:has(.dobra.aberta){ min-height:min(640px,calc(100svh - 120px)); }
+  .album-nav{ gap:12px; } .album-dica{ font-size:.6rem; }
+  .polaroid figcaption{ font-size:1rem; }
 }
+.hero:has(.dobra.aberta){ min-height:560px; }
 @media (prefers-reduced-motion:reduce){ .dobra{ transition:none; } .dobra:not(.aberta){ animation:none; } }
-.dobra:not(.aberta) .dobra-sob, .dobra:not(.aberta) .dobra-sob *{ pointer-events:none !important; }
+@media (max-width:760px){ .album-livro{ place-items:start center; padding-top:6px; } }
+html.album-on .wpp-float{ opacity:0; pointer-events:none; }

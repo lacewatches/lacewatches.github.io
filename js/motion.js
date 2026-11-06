@@ -14,7 +14,7 @@
     if (calmo || !window.Lenis) return;
     const lenis = new Lenis({
       lerp: 0.1, smoothWheel: true, anchors: false,
-      prevent: n => !!(n.closest && n.closest(".drawer, .side-menu, .lookbox, .rail-track, .chips, .pswp, [data-lenis-prevent]"))
+      prevent: n => !!(n.closest && n.closest(".drawer, .side-menu, .lookbox, .rail-track, .chips, .pswp, .dobra.aberta, [data-lenis-prevent]"))
     });
     M.lenis = lenis;
     const raf = t => { lenis.raf(t); requestAnimationFrame(raf); };

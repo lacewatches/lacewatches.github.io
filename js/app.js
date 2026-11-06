@@ -356,35 +356,118 @@
     iniciarDobra();
   }
 
-  /* ---------- cantinho dobrado: a folha vira e mostra as clientes ---------- */
+  /* ---------- cantinho dobrado: puxe a folha e o topo vira um álbum de clientes ---------- */
   function dobraHTML() {
-    const ls = LOOKS.slice(0, 4), capa = ls[0];
     return `<div class="dobra" id="dobra">
       <div class="dobra-sob">
-        ${img(capa.img, "", "dobra-fundo")}
-        <div class="dobra-cont">
-          <div class="dobra-top"><span class="eyebrow">Marque @${esc(LOJA.instagram || "lace_watchesbags")}</span><button class="dobra-x" aria-label="Fechar">✕</button></div>
-          <h3>Vocês de Lace</h3>
-          <div class="dobra-looks n${ls.length}">${ls.map(lookTile).join("")}</div>
-          <a href="#looks" class="more">Ver todas</a>
+        ${img(LOOKS[0].img, "", "dobra-fundo")}
+        <div class="album-palco">
+          <div class="album-topo">
+            <span class="eyebrow">Vocês de Lace</span>
+            <button class="dobra-x" aria-label="Fechar o álbum">✕</button>
+          </div>
+          <div class="album-livro"><div id="album"></div></div>
+          <div class="album-nav">
+            <button class="album-prev" aria-label="Página anterior">‹</button>
+            <span class="album-dica">Arraste a página para folhear</span>
+            <button class="album-next" aria-label="Próxima página">›</button>
+          </div>
         </div>
       </div>
       <div class="dobra-aba" aria-hidden="true"></div>
-      <button class="dobra-gatilho" aria-label="Ver fotos de quem usa Lace" aria-expanded="false"></button>
+      <button class="dobra-gatilho" aria-label="Abrir o álbum de quem usa Lace" aria-expanded="false"><span>puxe</span></button>
     </div>`;
   }
+  function paginasAlbum() {
+    const insta = esc(LOJA.instagram || "lace_watchesbags");
+    const capa = `<div class="pg pg-capa" data-density="hard"><div class="pg-in">
+        <span class="pg-marca">LACE</span><h3>Vocês<br><em>de Lace</em></h3><p>O álbum de quem usa Lace</p><span class="pg-seta">folheie →</span></div></div>`;
+    const looks = LOOKS.slice(0, 12).map((l, i) => {
+      const n = (l.pins || []).filter(pn => byId[pn.produto]).length;
+      return `<div class="pg"><div class="pg-in">
+        <figure class="polaroid${i % 2 ? " dir" : ""}">
+          ${img(l.img, l.legenda || "Cliente usando Lace", "", 'loading="eager"')}
+          <figcaption>${l.autor ? esc(arroba(l.autor)) : "Cliente Lace"}${l.legenda ? `<small>${esc(l.legenda)}</small>` : ""}</figcaption>
+        </figure>
+        ${n ? `<button class="pg-ver" data-look="${esc(l.id)}">Ver ${n === 1 ? "a peça" : "as " + n + " peças"}</button>` : ""}
+        <span class="pg-num">${i + 1}</span></div></div>`;
+    });
+    const fim = `<div class="pg pg-fim"><div class="pg-in"><span class="eyebrow">Sua foto aqui</span><h4>Poste usando Lace e marque <b>@${insta}</b></h4>
+        <a class="btn-dark" href="https://www.instagram.com/${insta}/" target="_blank" rel="noopener">Abrir o Instagram</a><a class="more" href="#looks">Ver todas as fotos</a></div></div>`;
+    const verso = `<div class="pg pg-capa pg-verso" data-density="hard"><div class="pg-in"><span class="pg-marca">LACE</span><p>watches &amp; bags</p></div></div>`;
+    const pags = [capa, ...looks, fim];
+    if (pags.length % 2) pags.push(`<div class="pg pg-vazia"><div class="pg-in"></div></div>`);
+    pags.push(verso);
+    return pags.join("");
+  }
+  const PAGEFLIP = "https://cdn.jsdelivr.net/npm/page-flip@2.0.7/dist/js/page-flip.browser.js";
+  let pfCarregando;
+  const carregarPageFlip = () => pfCarregando || (pfCarregando = new Promise((ok, fail) => {
+    if (window.St && St.PageFlip) return ok();
+    const sc = document.createElement("script"); sc.src = PAGEFLIP; sc.onload = ok; sc.onerror = () => { pfCarregando = null; fail(); }; document.head.appendChild(sc);
+  }));
   function iniciarDobra() {
     const d = $("#dobra"); if (!d) return;
-    const g = $(".dobra-gatilho", d), toque = matchMedia("(hover: none)").matches;
-    const abrir = v => { d.classList.toggle("aberta", v); g.setAttribute("aria-expanded", v); };
-    if (!toque) {
-      d.addEventListener("mouseenter", () => abrir(true));
-      d.addEventListener("mouseleave", () => abrir(false));
+    const g = $(".dobra-gatilho", d), hero = d.parentElement;
+    const calmo = matchMedia("(prefers-reduced-motion: reduce)").matches;
+    let livro = null, aberta = false, ro = null;
+    carregarPageFlip().catch(() => {});
+    const total = () => hero.offsetWidth + hero.offsetHeight + 40;
+    const setDobra = px => d.style.setProperty("--dobra", px + "px");
+    function montarLivro() {
+      const el = $("#album", d); el.innerHTML = paginasAlbum();
+      if (DB) DB.aplicarImagens(el);
+      const caixa = $(".album-livro", d), larg = caixa.clientWidth, alt = caixa.clientHeight;
+      const duplo = larg >= 700;
+      let h = alt, w = Math.round(h * 0.72);
+      const maxW = duplo ? larg / 2 : larg;
+      if (w > maxW) { w = Math.floor(maxW); h = Math.round(w / 0.72); }
+      try {
+        livro = new St.PageFlip(el, { width: w, height: h, size: "fixed", showCover: true, usePortrait: !duplo, maxShadowOpacity: .45,
+          drawShadow: true, flippingTime: calmo ? 300 : 900, mobileScrollSupport: false, clickEventForward: true, disableFlipByClick: true, showPageCorners: true, swipeDistance: 20 });
+        livro.loadFromHTML($$(".pg", el));
+        const att = () => { const i = livro.getCurrentPageIndex(), n = livro.getPageCount(); $(".album-prev", d).disabled = i <= 0; $(".album-next", d).disabled = i >= n - (duplo ? 2 : 1); };
+        livro.on("flip", () => { att(); d.classList.add("folheou"); }); att();
+        setTimeout(() => { if (livro && !d.classList.contains("folheou")) livro.flipNext("top"); }, calmo ? 99999 : 900);
+      } catch (e) { el.innerHTML = `<p class="empty">Não consegui abrir o álbum. <a href="#looks">Ver as fotos</a></p>`; }
     }
-    g.addEventListener("click", () => abrir(!d.classList.contains("aberta")));
-    $(".dobra-x", d).addEventListener("click", e => { e.stopPropagation(); abrir(false); });
-    document.addEventListener("click", e => { if (!d.contains(e.target)) abrir(false); });
-    document.addEventListener("keydown", e => { if (e.key === "Escape") abrir(false); });
+    async function abrir() {
+      if (aberta) return; aberta = true;
+      d.classList.remove("puxando", "espia"); d.classList.add("aberta"); g.setAttribute("aria-expanded", "true");
+      document.documentElement.classList.add("album-on");
+      setDobra(total());
+      if (window.ResizeObserver && !ro) { ro = new ResizeObserver(() => { if (aberta) setDobra(total()); }); ro.observe(hero); }
+      try { await carregarPageFlip(); } catch (e) {}
+      setTimeout(() => { if (aberta) montarLivro(); }, calmo ? 0 : 650);
+    }
+    function fechar() {
+      if (!aberta) return; aberta = false;
+      d.classList.remove("aberta", "folheou"); g.setAttribute("aria-expanded", "false");
+      document.documentElement.classList.remove("album-on");
+      setDobra(d.classList.contains("espia") ? 130 : 0); d.style.removeProperty("--dobra");
+      setTimeout(() => { if (!aberta) { try { livro && livro.destroy(); } catch (e) {} livro = null; const el = $(".album-livro", d); if (el) el.innerHTML = `<div id="album"></div>`; } }, 1000);
+    }
+    // espiar ao passar o mouse
+    g.addEventListener("mouseenter", () => { if (!aberta) d.classList.add("espia"); });
+    d.addEventListener("mouseleave", () => d.classList.remove("espia"));
+    // puxar a orelha com o dedo ou o mouse
+    let x0 = 0, y0 = 0, puxou = 0, ativo = false;
+    g.addEventListener("pointerdown", e => { if (aberta) return; ativo = true; puxou = 0; x0 = e.clientX; y0 = e.clientY; g.setPointerCapture(e.pointerId); d.classList.add("puxando"); });
+    g.addEventListener("pointermove", e => {
+      if (!ativo) return; puxou = Math.max(0, (e.clientX - x0) + (e.clientY - y0));
+      setDobra(Math.min(total(), 70 + puxou * 1.15));
+    });
+    const soltar = () => {
+      if (!ativo) return; ativo = false; d.classList.remove("puxando");
+      if (puxou > 120 || puxou < 6) abrir(); else d.style.removeProperty("--dobra");
+    };
+    g.addEventListener("pointerup", soltar); g.addEventListener("pointercancel", soltar);
+    g.addEventListener("keydown", e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); abrir(); } });
+    $(".dobra-x", d).addEventListener("click", fechar);
+    $(".album-prev", d).addEventListener("click", () => livro && livro.flipPrev("top"));
+    $(".album-next", d).addEventListener("click", () => livro && livro.flipNext("top"));
+    document.addEventListener("keydown", e => { if (!aberta || $(".lookbox") || $(".pswp")) return; if (e.key === "Escape") fechar(); if (e.key === "ArrowRight") livro && livro.flipNext(); if (e.key === "ArrowLeft") livro && livro.flipPrev(); });
+    addEventListener("hashchange", () => { document.documentElement.classList.remove("album-on"); }, { once: true });
   }
 
   let timerSlide;
